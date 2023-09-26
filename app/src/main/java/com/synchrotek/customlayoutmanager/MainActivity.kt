@@ -2,6 +2,7 @@ package com.synchrotek.customlayoutmanager
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.recyclerview.widget.GridLayoutManager
 import com.synchrotek.customlayoutmanager.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -17,7 +18,7 @@ class MainActivity : AppCompatActivity() {
         itemList = ArrayList()
         itemListItems()
         itemsAdapter = ItemsAdapter(itemList)
-        binding.recyclerView.layoutManager = CustomLayoutManager(18, 0)
+        binding.recyclerView.layoutManager = CustomLayoutManager(2, 5)
         binding.recyclerView.adapter = itemsAdapter
     }
 

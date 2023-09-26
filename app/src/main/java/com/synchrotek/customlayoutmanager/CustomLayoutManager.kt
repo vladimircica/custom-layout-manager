@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.RecyclerView
 import java.lang.Integer.max
 import java.lang.Integer.min
 
+
 class CustomLayoutManager(
     private val rows: Int,
     private val columns: Int
@@ -12,6 +13,7 @@ class CustomLayoutManager(
 
     private var horizontalOffSet: Int = 0
     private val viewWidth = 300
+    private val viewHeight = 95
 
     override fun generateDefaultLayoutParams(): RecyclerView.LayoutParams =
         RecyclerView.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
@@ -29,46 +31,55 @@ class CustomLayoutManager(
         recycler: RecyclerView.Recycler,
         state: RecyclerView.State
     ): Int {
+        if (itemCount == 0 || dx == 0) {
+            return 0
+        }
+
         val lastOffset = horizontalOffSet
         val maxOffset = calculateMaxOffset()
 
         // Calculate the new offset while ensuring it stays within bounds
-        horizontalOffSet = min(maxOffset, max(0, horizontalOffSet + dx))
-
-        // If the offset didn't change, we didn't scroll
-        if (horizontalOffSet == lastOffset) {
+        val newOffset = min(maxOffset, max(0, horizontalOffSet + dx))
+        if (newOffset == horizontalOffSet) {
             return 0
         }
+        val scrolled = newOffset - lastOffset
+        horizontalOffSet = newOffset
 
         // Layout the items with the new offset
         fill(recycler)
 
-        // Return the actual amount scrolled
-        return horizontalOffSet - lastOffset
+        return scrolled
     }
 
     private fun calculateMaxOffset(): Int {
-        val itemCount = rows
-        if (itemCount == 0) return 0
+        val totalMatrixWidth = columns * viewWidth
+        val itemsPerMatrix = columns * rows
+        val totalMatrices = (itemCount + itemsPerMatrix - 1) / itemsPerMatrix
 
-        val lastItemPosition = itemCount - 1
-        val lastItemRight = lastItemPosition * viewWidth
-
-        return max(0, lastItemRight - width)
+        // Calculate the maximum offset to ensure you cannot scroll infinitely to the right
+        return max(0, totalMatrixWidth * totalMatrices - width)
     }
 
     private fun fill(recycler: RecyclerView.Recycler) {
         detachAndScrapAttachedViews(recycler)
-        for (i in 0 until rows) {
-            val left = i * viewWidth - horizontalOffSet
+        val itemsPerMatrix = rows * columns
+        for (i in 0 until itemCount) {
+            val matrixIndex = i / itemsPerMatrix
+            val itemIndexInMatrix = i % itemsPerMatrix
+
+            val row = itemIndexInMatrix / columns
+            val col = itemIndexInMatrix % columns
+
+            val left = (col + matrixIndex * columns) * viewWidth - horizontalOffSet
             val right = left + viewWidth
-            val top = 0
-            val bottom = top + viewWidth
+            val top = row * viewHeight
+            val bottom = top + viewHeight
 
             val view = recycler.getViewForPosition(i)
             addView(view)
 
-            measureChild(view, viewWidth, viewWidth)
+            measureChild(view, viewWidth, viewHeight)
 
             layoutDecorated(view, left, top, right, bottom)
         }
