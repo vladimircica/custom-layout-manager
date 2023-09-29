@@ -2,6 +2,7 @@ package com.synchrotek.customlayoutmanager
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 
 //TODO Introduce just one ViewType. Not need to have VIEW_TYPE_NORMAL
@@ -20,6 +21,7 @@ class ItemsAdapter(private val itemList: ArrayList<Item>) :
                 val viewLayout = inflater.inflate(R.layout.item_rv, parent, false)
                 ItemViewHolder(viewLayout)
             }
+
             else -> throw IllegalArgumentException("Invalid viewType: $viewType")
         }
     }
@@ -36,4 +38,12 @@ class ItemsAdapter(private val itemList: ArrayList<Item>) :
     }
 
     override fun getItemCount() = itemList.size
+
+    class MyDiffCallback : DiffUtil.ItemCallback<Item>() {
+        override fun areItemsTheSame(firstItem: Item, secondItem: Item) =
+            firstItem.itemName == secondItem.itemName
+
+        override fun areContentsTheSame(firstItem: Item, secondItem: Item) =
+            firstItem == secondItem
+    }
 }

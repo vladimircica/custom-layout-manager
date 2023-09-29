@@ -3,7 +3,6 @@ package com.synchrotek.customlayoutmanager
 import android.content.Context
 import android.graphics.PointF
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import java.lang.Integer.max
@@ -153,9 +152,6 @@ class CustomGridLayoutManager(
         }
 
         return totalWidth
-
-
-        LinearLayoutManager
     }
 
     @Override
@@ -163,26 +159,32 @@ class CustomGridLayoutManager(
         recyclerView: RecyclerView, state: RecyclerView.State?,
         position: Int
     ) {
-        val linearSmoothScroller = CustomSmoothScroller(recyclerView.context)
-        linearSmoothScroller.targetPosition = position
-        startSmoothScroll(linearSmoothScroller)
+        val itemsPerPage = rows * columns
+        val currentPage = position / itemsPerPage
+        val nextPageStart = currentPage * itemsPerPage
+
+        val smoothScroller = CustomSmoothScroller(recyclerView.context)
+
+        if (reverseLayout) {
+            smoothScroller.targetPosition = nextPageStart + (rows * columns) - 1
+        } else {
+            smoothScroller.targetPosition = nextPageStart
+        }
+        startSmoothScroll(smoothScroller)
     }
 
     override fun computeScrollVectorForPosition(targetPosition: Int): PointF? {
-        println("computeScrollVectorForPosition -> $childCount")
-        if (childCount == 0) {
-            return null
-        }
-
-
-
-
-        return PointF(0.0F, 0.0F)
+        val direction = if (reverseLayout) -1f else 1f
+        return PointF(direction, 0f)
     }
 
     private inner class CustomSmoothScroller(context: Context) : LinearSmoothScroller(context) {
         override fun computeScrollVectorForPosition(targetPosition: Int): PointF? {
             return this@CustomGridLayoutManager.computeScrollVectorForPosition(targetPosition)
+        }
+
+        override fun getHorizontalSnapPreference(): Int {
+            return SNAP_TO_START
         }
     }
 }
