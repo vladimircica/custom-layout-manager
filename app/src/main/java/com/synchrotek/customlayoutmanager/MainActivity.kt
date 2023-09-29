@@ -20,8 +20,11 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerView.layoutManager = layoutManager
         binding.recyclerView.adapter = itemsAdapter
 
-        // Here we should configure desired page where smooth scroller should scroll
+        // Here we should configure desired item where smooth scroller should scroll
         // Page is calculated depending of rows x matrices grid size
+        // If item is contained it that page calculation fill align that page
+        // On left and right edges
+        // For example item 38 should be located in page 3 since there are 10 items per page
         binding.recyclerView.smoothScrollToPosition(38)
     }
 
