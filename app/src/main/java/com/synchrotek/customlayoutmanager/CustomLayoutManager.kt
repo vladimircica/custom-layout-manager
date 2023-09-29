@@ -1,21 +1,22 @@
 package com.synchrotek.customlayoutmanager
 
+import android.content.Context
+import android.graphics.PointF
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import java.lang.Integer.max
 import java.lang.Integer.min
 
 
-class CustomLayoutManager(
+class CustomGridLayoutManager(
     private val rows: Int,
-    private val columns: Int
-) : RecyclerView.LayoutManager() {
+    private val columns: Int,
+    private val reverseLayout: Boolean = false,
+) : RecyclerView.LayoutManager(), RecyclerView.SmoothScroller.ScrollVectorProvider {
 
     private var horizontalOffSet: Int = 0
-
-    //TODO This should be added to constructor to be able to configure manually
-    //TODO Use this value for reverse layout
-    private var reverseLayout: Boolean = false
 
     // TODO Change this not to be hardcoded values
     // TODO For width and height
@@ -26,8 +27,7 @@ class CustomLayoutManager(
         RecyclerView.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
 
     override fun onLayoutChildren(recycler: RecyclerView.Recycler, state: RecyclerView.State) {
-        println("onLayoutChildren")
-        fill(recycler)
+        fillTemp(recycler)
     }
 
     override fun canScrollHorizontally(): Boolean {
@@ -55,7 +55,7 @@ class CustomLayoutManager(
         horizontalOffSet = newOffset
 
         // Layout the items with the new offset
-        fill(recycler)
+        fillTemp(recycler)
 
         return scrolled
     }
@@ -153,5 +153,36 @@ class CustomLayoutManager(
         }
 
         return totalWidth
+
+
+        LinearLayoutManager
+    }
+
+    @Override
+    override fun smoothScrollToPosition(
+        recyclerView: RecyclerView, state: RecyclerView.State?,
+        position: Int
+    ) {
+        val linearSmoothScroller = CustomSmoothScroller(recyclerView.context)
+        linearSmoothScroller.targetPosition = position
+        startSmoothScroll(linearSmoothScroller)
+    }
+
+    override fun computeScrollVectorForPosition(targetPosition: Int): PointF? {
+        println("computeScrollVectorForPosition -> $childCount")
+        if (childCount == 0) {
+            return null
+        }
+
+
+
+
+        return PointF(0.0F, 0.0F)
+    }
+
+    private inner class CustomSmoothScroller(context: Context) : LinearSmoothScroller(context) {
+        override fun computeScrollVectorForPosition(targetPosition: Int): PointF? {
+            return this@CustomGridLayoutManager.computeScrollVectorForPosition(targetPosition)
+        }
     }
 }

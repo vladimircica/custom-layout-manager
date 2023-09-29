@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 
+//TODO Introduce just one ViewType. Not need to have VIEW_TYPE_NORMAL
 class ItemsAdapter(private val itemList: ArrayList<Item>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -19,12 +20,6 @@ class ItemsAdapter(private val itemList: ArrayList<Item>) :
                 val viewLayout = inflater.inflate(R.layout.item_rv, parent, false)
                 ItemViewHolder(viewLayout)
             }
-
-//            VIEW_TYPE_SPECIAL -> {
-//                val viewLayout = inflater.inflate(R.layout.item_rv, parent, false)
-//                SpecialItemViewHolder(viewLayout)
-//            }
-            // Define more cases for different view types as needed
             else -> throw IllegalArgumentException("Invalid viewType: $viewType")
         }
     }
@@ -37,21 +32,8 @@ class ItemsAdapter(private val itemList: ArrayList<Item>) :
                 // Bind data for normal items
                 holder.itemName.text = currentItem.itemName
             }
-
-//            is SpecialItemViewHolder -> {
-//                // Bind data for special items
-//                holder.itemName.text = "|"
-//            }
-            // Handle more view types if necessary
         }
     }
 
     override fun getItemCount() = itemList.size
-
-//    override fun getItemViewType(position: Int): Int {
-//        return when (position) {
-//            5 -> VIEW_TYPE_SPECIAL
-//            else -> VIEW_TYPE_NORMAL
-//        }
-//    }
 }
