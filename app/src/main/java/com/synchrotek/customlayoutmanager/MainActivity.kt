@@ -29,6 +29,9 @@ class MainActivity : AppCompatActivity() {
         // On left and right edges
         // For example item 38 should be located in page 3 since there are 10 items per page
         binding.recyclerView.smoothScrollToPosition(38)
+
+        // Add simple ItemDecorator to RecyclerView which overrides default insets
+        // When calculation of insets item decorator is finished we can add custom Inset Decorator to RV
     }
 
     private fun populateItemListData(): List<Item> {

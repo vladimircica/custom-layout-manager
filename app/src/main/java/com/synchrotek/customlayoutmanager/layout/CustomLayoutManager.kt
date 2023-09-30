@@ -15,9 +15,22 @@ class CustomGridLayoutManager(
     private val reverseLayout: Boolean = false,
 ) : RecyclerView.LayoutManager(), RecyclerView.SmoothScroller.ScrollVectorProvider {
 
+    companion object {
+        const val DEFAULT_COUNT = 1
+    }
+
     private var horizontalOffSet: Int = 0
+
     private var mDecoratedChildWidth: Int = 0
     private var mDecoratedChildHeight: Int = 0
+    private var mVisibleColumnCount: Int = 0
+
+    private val mTotalColumnCount: Int = DEFAULT_COUNT
+    private var mVisibleRowCount: Int = 0
+
+    private var mFirstChangedPosition: Int = 0
+    private var mChangedPositionCount: Int = 0
+    private var mFirstVisiblePosition: Int = 0
 
     // TODO Change this not to be hardcoded values
     // TODO For width and height
@@ -187,5 +200,104 @@ class CustomGridLayoutManager(
         override fun getHorizontalSnapPreference(): Int {
             return SNAP_TO_START
         }
+    }
+
+    private fun updateWindowSizing() {
+        mVisibleColumnCount = getHorizontalSpace() / mDecoratedChildWidth + 1
+        if (getHorizontalSpace() % mDecoratedChildWidth > 0) {
+            mVisibleColumnCount++
+        }
+
+        //Allow minimum value for small data sets
+        if (mVisibleColumnCount > getTotalColumnCount()) {
+            mVisibleColumnCount = getTotalColumnCount()
+        }
+        mVisibleRowCount = getVerticalSpace() / mDecoratedChildHeight + 1
+        if (getVerticalSpace() % mDecoratedChildHeight > 0) {
+            mVisibleRowCount++
+        }
+        if (mVisibleRowCount > getTotalRowCount()) {
+            mVisibleRowCount = getTotalRowCount()
+        }
+    }
+
+    private fun getHorizontalSpace(): Int {
+        return width - paddingRight - paddingLeft
+    }
+
+    private fun getTotalColumnCount(): Int {
+        return if (itemCount < mTotalColumnCount) {
+            itemCount
+        } else mTotalColumnCount
+    }
+
+    private fun getVerticalSpace(): Int {
+        return height - paddingBottom - paddingTop
+    }
+
+    private fun getTotalRowCount(): Int {
+        if (itemCount == 0 || mTotalColumnCount == 0) {
+            return 0
+        }
+        var maxRow = itemCount / mTotalColumnCount
+        //Bump the row count if it's not exactly even
+        if (itemCount % mTotalColumnCount != 0) {
+            maxRow++
+        }
+        return maxRow
+    }
+
+    /**\
+     * Try to implement onLayoutChildren using getDecoratedMeasuredWidth and
+     * getDecoratedMeasuredHeight. Also using getDecoratedLeft and getDecoratedRight
+     * to overcome issues with layout measure in case RTL is enabled
+     */
+    private fun fillGridNew(recycler: RecyclerView.Recycler, state: RecyclerView.State) {
+        if (itemCount == 0) {
+            detachAndScrapAttachedViews(recycler)
+            return
+        }
+
+        if (childCount == 0 && state.isPreLayout) {
+            return
+        }
+
+        if (!state.isPreLayout) {
+            mFirstChangedPosition = 0
+            mChangedPositionCount = 0
+        }
+
+        if (childCount == 0) { //First or empty layout
+            //Scrap measure one child
+            val scrap = recycler.getViewForPosition(0)
+            addView(scrap)
+            measureChildWithMargins(scrap, 0, 0)
+
+            mDecoratedChildWidth = getDecoratedMeasuredWidth(scrap)
+            mDecoratedChildHeight = getDecoratedMeasuredHeight(scrap)
+            detachAndScrapView(scrap, recycler)
+        }
+
+
+        //Always update the visible row/column counts
+        updateWindowSizing()
+
+        val childLeft: Int
+        val childTop: Int
+
+        if (childCount == 0) {
+            mFirstVisiblePosition = 0
+            childLeft = paddingLeft
+            childTop = paddingTop
+        } else if (!state.isPreLayout
+            && getVisibleChildCount() >= state.itemCount
+        ) {
+
+        }
+    }
+
+    //TODO We should implement Utils class for this
+    private fun getVisibleChildCount(): Int {
+        return mVisibleColumnCount * mVisibleRowCount
     }
 }
