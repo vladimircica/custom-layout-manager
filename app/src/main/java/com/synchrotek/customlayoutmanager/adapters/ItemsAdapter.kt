@@ -1,9 +1,12 @@
-package com.synchrotek.customlayoutmanager
+package com.synchrotek.customlayoutmanager.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.synchrotek.customlayoutmanager.model.Item
+import com.synchrotek.customlayoutmanager.holder.ItemViewHolder
+import com.synchrotek.customlayoutmanager.R
 
 //TODO Introduce just one ViewType. Not need to have VIEW_TYPE_NORMAL
 class ItemsAdapter(private val itemList: ArrayList<Item>) :

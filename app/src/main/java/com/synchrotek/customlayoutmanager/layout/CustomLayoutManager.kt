@@ -1,4 +1,4 @@
-package com.synchrotek.customlayoutmanager
+package com.synchrotek.customlayoutmanager.layout
 
 import android.content.Context
 import android.graphics.PointF
@@ -16,6 +16,8 @@ class CustomGridLayoutManager(
 ) : RecyclerView.LayoutManager(), RecyclerView.SmoothScroller.ScrollVectorProvider {
 
     private var horizontalOffSet: Int = 0
+    private var mDecoratedChildWidth: Int = 0
+    private var mDecoratedChildHeight: Int = 0
 
     // TODO Change this not to be hardcoded values
     // TODO For width and height
@@ -107,7 +109,6 @@ class CustomGridLayoutManager(
         detachAndScrapAttachedViews(recycler)
         val itemsPerMatrix = rows * columns
         val matrices = itemCount / itemsPerMatrix
-        println("matrices number -> $matrices")
 
         val totalContentWidth = columns * itemsPerMatrix
 

@@ -2,7 +2,10 @@ package com.synchrotek.customlayoutmanager
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.synchrotek.customlayoutmanager.adapters.ItemsAdapter
 import com.synchrotek.customlayoutmanager.databinding.ActivityMainBinding
+import com.synchrotek.customlayoutmanager.layout.CustomGridLayoutManager
+import com.synchrotek.customlayoutmanager.model.Item
 
 class MainActivity : AppCompatActivity() {
 
@@ -15,7 +18,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         itemsAdapter = ItemsAdapter(populateItemListData() as ArrayList<Item>)
-        val layoutManager = CustomGridLayoutManager(rows = 2, columns = 5)
+        val layoutManager = CustomGridLayoutManager(rows = 2, columns = 5, false)
 
         binding.recyclerView.layoutManager = layoutManager
         binding.recyclerView.adapter = itemsAdapter
