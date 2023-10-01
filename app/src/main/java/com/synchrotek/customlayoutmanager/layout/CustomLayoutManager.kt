@@ -2,6 +2,7 @@ package com.synchrotek.customlayoutmanager.layout
 
 import android.content.Context
 import android.graphics.PointF
+import android.view.View
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
@@ -91,6 +92,10 @@ class CustomGridLayoutManager(
         val matrices = itemCount / itemsPerMatrix
         val totalContentWidth = columns * itemsPerMatrix
 
+//        if (childCount == 0) return
+//
+        var totalWidth = 0
+
         for (i in 0 until itemCount) {
             val matrixIndex = i / itemsPerMatrix
             val itemIndexInMatrix = i % itemsPerMatrix
@@ -107,7 +112,7 @@ class CustomGridLayoutManager(
             val view = recycler.getViewForPosition(i)
             addView(view)
 
-            measureChild(view, viewWidth, viewHeight)
+            measureChildWithMargins(view, viewWidth, viewHeight)
 
             layoutDecoratedWithMargins(view, left, top, right, bottom)
         }
@@ -116,6 +121,15 @@ class CustomGridLayoutManager(
         scrapListCopy.forEach {
             recycler.recycleView(it.itemView)
         }
+
+        // Iterate through child views and sum up their widths
+        for (i in 0 until childCount) {
+            val child = getChildAt(i)
+            val params = child?.layoutParams as RecyclerView.LayoutParams
+            totalWidth += getDecoratedMeasuredWidth(child) + params.leftMargin + params.rightMargin
+        }
+
+        println("Sum of totalWidth -> $totalWidth")
     }
 
     private fun fill(recycler: RecyclerView.Recycler) {
@@ -143,7 +157,7 @@ class CustomGridLayoutManager(
 
             measureChild(view, viewWidth, viewHeight)
 
-            layoutDecoratedWithMargins(view, left, top, right, bottom)
+            layoutDecorated(view, left, top, right, bottom)
         }
 
         val scrapListCopy = recycler.scrapList.toList()
@@ -204,18 +218,22 @@ class CustomGridLayoutManager(
 
     private fun updateWindowSizing() {
         mVisibleColumnCount = getHorizontalSpace() / mDecoratedChildWidth + 1
+
         if (getHorizontalSpace() % mDecoratedChildWidth > 0) {
             mVisibleColumnCount++
         }
 
-        //Allow minimum value for small data sets
+
         if (mVisibleColumnCount > getTotalColumnCount()) {
             mVisibleColumnCount = getTotalColumnCount()
         }
+
         mVisibleRowCount = getVerticalSpace() / mDecoratedChildHeight + 1
+
         if (getVerticalSpace() % mDecoratedChildHeight > 0) {
             mVisibleRowCount++
         }
+
         if (mVisibleRowCount > getTotalRowCount()) {
             mVisibleRowCount = getTotalRowCount()
         }
@@ -240,7 +258,6 @@ class CustomGridLayoutManager(
             return 0
         }
         var maxRow = itemCount / mTotalColumnCount
-        //Bump the row count if it's not exactly even
         if (itemCount % mTotalColumnCount != 0) {
             maxRow++
         }
@@ -282,8 +299,8 @@ class CustomGridLayoutManager(
         //Always update the visible row/column counts
         updateWindowSizing()
 
-        val childLeft: Int
-        val childTop: Int
+        var childLeft: Int
+        var childTop: Int
 
         if (childCount == 0) {
             mFirstVisiblePosition = 0
@@ -292,8 +309,90 @@ class CustomGridLayoutManager(
         } else if (!state.isPreLayout
             && getVisibleChildCount() >= state.itemCount
         ) {
-
+            mFirstVisiblePosition = 0
+            childLeft = paddingLeft
+            childTop = paddingTop
+        } else {
+            val topChild = getChildAt(0)
+            childLeft = getDecoratedLeft(topChild!!)
+            childTop = getDecoratedTop(topChild)
         }
+
+        if (!state.isPreLayout && getVerticalSpace() > getTotalRowCount() * mDecoratedChildHeight) {
+            mFirstVisiblePosition %= getTotalColumnCount()
+            childTop = paddingTop
+
+            if (mFirstVisiblePosition + mVisibleColumnCount > state.itemCount) {
+                mFirstVisiblePosition = (state.itemCount - mVisibleColumnCount).coerceAtLeast(0)
+                childLeft = paddingLeft
+            }
+
+
+            val maxFirstRow = getTotalRowCount() - (mVisibleRowCount - 1)
+            val maxFirstCol = getTotalColumnCount() - (mVisibleColumnCount - 1)
+            val isOutOfRowBounds: Boolean = getFirstVisibleRow() > maxFirstRow
+            val isOutOfColBounds: Boolean = getFirstVisibleColumn() > maxFirstCol
+
+            if (isOutOfRowBounds || isOutOfColBounds) {
+                val firstRow: Int = if (isOutOfRowBounds) {
+                    maxFirstRow
+                } else {
+                    getFirstVisibleRow()
+                }
+
+                val firstCol: Int = if (isOutOfColBounds) {
+                    maxFirstCol
+                } else {
+                    getFirstVisibleColumn()
+                }
+
+                mFirstVisiblePosition = firstRow * getTotalColumnCount() + firstCol
+                childLeft = getHorizontalSpace() - mDecoratedChildWidth * mVisibleColumnCount
+                childTop = getVerticalSpace() - mDecoratedChildHeight * mVisibleRowCount
+
+                if (getFirstVisibleRow() == 0) {
+                    childTop = childTop.coerceAtMost(paddingTop)
+                }
+                if (getFirstVisibleColumn() == 0) {
+                    childLeft = childLeft.coerceAtMost(paddingLeft)
+                }
+            }
+        }
+
+        detachAndScrapAttachedViews(recycler)
+
+
+        //Evaluate any disappearing views that may exist
+        if (!state.isPreLayout && !recycler.scrapList.isEmpty()) {
+            val scrapList = recycler.scrapList
+            val disappearingViews = HashSet<View>(scrapList.size)
+            for (holder in scrapList) {
+
+            }
+            for (child in disappearingViews) {
+                layoutDisappearingView(child)
+            }
+        }
+    }
+
+    private fun layoutDisappearingView(disappearingChild: View) {
+
+    }
+
+    private fun getGlobalRowOfPosition(position: Int): Int {
+        return position / mTotalColumnCount
+    }
+
+    private fun getGlobalColumnOfPosition(position: Int): Int {
+        return position % mTotalColumnCount
+    }
+
+    private fun getFirstVisibleRow(): Int {
+        return mFirstVisiblePosition / getTotalColumnCount()
+    }
+
+    private fun getFirstVisibleColumn(): Int {
+        return mFirstVisiblePosition % getTotalColumnCount()
     }
 
     //TODO We should implement Utils class for this
