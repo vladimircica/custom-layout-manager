@@ -17,7 +17,7 @@ import com.synchrotek.customlayoutmanager.R;
  */
 public class InsetDecoration extends RecyclerView.ItemDecoration {
 
-    private int mInsets;
+    private final int mInsets;
 
     public InsetDecoration(Context context) {
         mInsets = context.getResources().getDimensionPixelSize(R.dimen.item_insets);

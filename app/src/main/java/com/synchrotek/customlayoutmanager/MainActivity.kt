@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.recyclerview.widget.SnapHelper
 import com.synchrotek.customlayoutmanager.adapters.ItemsAdapter
 import com.synchrotek.customlayoutmanager.databinding.ActivityMainBinding
+import com.synchrotek.customlayoutmanager.decorator.InsetDecoration
 import com.synchrotek.customlayoutmanager.layout.CustomGridLayoutManager
 import com.synchrotek.customlayoutmanager.model.Item
 import com.synchrotek.customlayoutmanager.snaphelper.CustomSnapHelper
@@ -23,7 +24,12 @@ class MainActivity : AppCompatActivity() {
         val columns = 5
 
         itemsAdapter = ItemsAdapter(populateItemListData() as ArrayList<Item>)
-        val layoutManager = CustomGridLayoutManager(rows = rows, columns = columns, false)
+        val layoutManager =
+            CustomGridLayoutManager(
+                rows = rows,
+                columns = columns,
+                context = this
+            )
 
         val recyclerView = binding.recyclerView
 

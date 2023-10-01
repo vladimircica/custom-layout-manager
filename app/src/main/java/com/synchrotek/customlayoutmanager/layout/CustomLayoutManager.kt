@@ -2,6 +2,7 @@ package com.synchrotek.customlayoutmanager.layout
 
 import android.content.Context
 import android.graphics.PointF
+import android.util.DisplayMetrics
 import android.view.View
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import androidx.recyclerview.widget.LinearSmoothScroller
@@ -14,6 +15,7 @@ class CustomGridLayoutManager(
     private val rows: Int,
     private val columns: Int,
     private val reverseLayout: Boolean = false,
+    private val context: Context
 ) : RecyclerView.LayoutManager(), RecyclerView.SmoothScroller.ScrollVectorProvider {
 
     companion object {
@@ -38,11 +40,12 @@ class CustomGridLayoutManager(
     private val viewWidth = 300
     private val viewHeight = 95
 
+
     override fun generateDefaultLayoutParams(): RecyclerView.LayoutParams =
         RecyclerView.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
 
     override fun onLayoutChildren(recycler: RecyclerView.Recycler, state: RecyclerView.State) {
-        fillTemp(recycler)
+        fill(recycler, state)
     }
 
     override fun canScrollHorizontally(): Boolean {
@@ -70,7 +73,7 @@ class CustomGridLayoutManager(
         horizontalOffSet = newOffset
 
         // Layout the items with the new offset
-        fillTemp(recycler)
+        fill(recycler, state)
 
         return scrolled
     }
@@ -80,21 +83,25 @@ class CustomGridLayoutManager(
         val itemsPerMatrix = columns * rows
         val totalMatrices = (itemCount + itemsPerMatrix - 1) / itemsPerMatrix
 
-        // Calculate the maximum offset to ensure you cannot scroll infinitely to the right
+        // Calculate the maximum offset to ensure you cannot scroll infinitely to the right or left
         return max(0, totalMatrixWidth * totalMatrices - width)
     }
 
-    //TODO This method should be refactored and used for both LTR and RTL
-    //TODO For now use just fillTemp method. Will merge it with fill
-    private fun fillTemp(recycler: RecyclerView.Recycler) {
-        detachAndScrapAttachedViews(recycler)
-        val itemsPerMatrix = rows * columns
-        val matrices = itemCount / itemsPerMatrix
-        val totalContentWidth = columns * itemsPerMatrix
+    private fun fill(recycler: RecyclerView.Recycler, state: RecyclerView.State) {
+        if (itemCount == 0) {
+            detachAndScrapAttachedViews(recycler)
+            return
+        }
 
-//        if (childCount == 0) return
-//
-        var totalWidth = 0
+        if (childCount == 0 && state.isPreLayout) {
+            return
+        }
+
+        detachAndScrapAttachedViews(recycler)
+
+        val itemsPerMatrix = rows * columns
+        val displayMetrics: DisplayMetrics = context.resources.displayMetrics
+        val displayWidthInPixels = displayMetrics.widthPixels
 
         for (i in 0 until itemCount) {
             val matrixIndex = i / itemsPerMatrix
@@ -103,11 +110,20 @@ class CustomGridLayoutManager(
             val row = itemIndexInMatrix / columns
             val col = itemIndexInMatrix % columns
 
-            val left = (col + matrixIndex * columns) * viewWidth - horizontalOffSet
-            val right = left + viewWidth
+
+            var right: Int
+            var left: Int
+            if (reverseLayout) {
+                right =
+                    displayWidthInPixels - ((col + matrixIndex * columns) * viewWidth - horizontalOffSet)
+                left = right - viewWidth
+            } else {
+                left = (col + matrixIndex * columns) * viewWidth - horizontalOffSet
+                right = left + viewWidth
+            }
+
             val top = row * viewHeight
             val bottom = top + viewHeight
-
 
             val view = recycler.getViewForPosition(i)
             addView(view)
@@ -121,65 +137,6 @@ class CustomGridLayoutManager(
         scrapListCopy.forEach {
             recycler.recycleView(it.itemView)
         }
-
-        // Iterate through child views and sum up their widths
-        for (i in 0 until childCount) {
-            val child = getChildAt(i)
-            val params = child?.layoutParams as RecyclerView.LayoutParams
-            totalWidth += getDecoratedMeasuredWidth(child) + params.leftMargin + params.rightMargin
-        }
-
-        println("Sum of totalWidth -> $totalWidth")
-    }
-
-    private fun fill(recycler: RecyclerView.Recycler) {
-        detachAndScrapAttachedViews(recycler)
-        val itemsPerMatrix = rows * columns
-        val matrices = itemCount / itemsPerMatrix
-
-        val totalContentWidth = columns * itemsPerMatrix
-
-        for (i in 0 until itemCount) {
-            val matrixIndex = (i / itemsPerMatrix)
-            val itemIndexInMatrix = (itemsPerMatrix - 1) - (i % itemsPerMatrix)
-            val col = itemIndexInMatrix % columns
-            val row = (itemsPerMatrix / columns - 1) - (itemIndexInMatrix / columns)
-
-            val left =
-                totalContentWidth - (((columns - 1 - col) + matrixIndex * columns) * viewWidth - horizontalOffSet)
-            val right = left + viewWidth
-            val top = row * viewHeight
-            val bottom = top + viewHeight
-
-
-            val view = recycler.getViewForPosition(i)
-            addView(view)
-
-            measureChild(view, viewWidth, viewHeight)
-
-            layoutDecorated(view, left, top, right, bottom)
-        }
-
-        val scrapListCopy = recycler.scrapList.toList()
-        scrapListCopy.forEach {
-            recycler.recycleView(it.itemView)
-        }
-    }
-
-    private fun calculateTotalContentWidth(): Int {
-        // Calculate the total width of your content here
-        // You may need to iterate through your items and matrices
-        // and sum up the widths of all elements
-        var totalWidth = 0
-        for (i in 0 until itemCount) {
-            val childView = getChildAt(i)
-            if (childView != null) {
-                val childWidth = getRightDecorationWidth(childView)
-                totalWidth += childWidth
-            }
-        }
-
-        return totalWidth
     }
 
     @Override
@@ -201,7 +158,7 @@ class CustomGridLayoutManager(
         startSmoothScroll(smoothScroller)
     }
 
-    override fun computeScrollVectorForPosition(targetPosition: Int): PointF? {
+    override fun computeScrollVectorForPosition(targetPosition: Int): PointF {
         val direction = if (reverseLayout) -1f else 1f
         return PointF(direction, 0f)
     }
@@ -264,7 +221,7 @@ class CustomGridLayoutManager(
         return maxRow
     }
 
-    /**\
+    /**
      * Try to implement onLayoutChildren using getDecoratedMeasuredWidth and
      * getDecoratedMeasuredHeight. Also using getDecoratedLeft and getDecoratedRight
      * to overcome issues with layout measure in case RTL is enabled
@@ -326,7 +283,6 @@ class CustomGridLayoutManager(
                 mFirstVisiblePosition = (state.itemCount - mVisibleColumnCount).coerceAtLeast(0)
                 childLeft = paddingLeft
             }
-
 
             val maxFirstRow = getTotalRowCount() - (mVisibleRowCount - 1)
             val maxFirstCol = getTotalColumnCount() - (mVisibleColumnCount - 1)
@@ -395,7 +351,6 @@ class CustomGridLayoutManager(
         return mFirstVisiblePosition % getTotalColumnCount()
     }
 
-    //TODO We should implement Utils class for this
     private fun getVisibleChildCount(): Int {
         return mVisibleColumnCount * mVisibleRowCount
     }

@@ -2,19 +2,16 @@ package com.synchrotek.customlayoutmanager.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.synchrotek.customlayoutmanager.model.Item
 import com.synchrotek.customlayoutmanager.holder.ItemViewHolder
 import com.synchrotek.customlayoutmanager.R
 
-//TODO Introduce just one ViewType. Not need to have VIEW_TYPE_NORMAL
 class ItemsAdapter(private val itemList: ArrayList<Item>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         private const val VIEW_TYPE_NORMAL = 0
-        private const val VIEW_TYPE_SPECIAL = 1
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -31,22 +28,12 @@ class ItemsAdapter(private val itemList: ArrayList<Item>) :
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val currentItem = itemList[position]
-
         when (holder) {
             is ItemViewHolder -> {
-                // Bind data for normal items
                 holder.itemName.text = currentItem.itemName
             }
         }
     }
 
     override fun getItemCount() = itemList.size
-
-    class MyDiffCallback : DiffUtil.ItemCallback<Item>() {
-        override fun areItemsTheSame(firstItem: Item, secondItem: Item) =
-            firstItem.itemName == secondItem.itemName
-
-        override fun areContentsTheSame(firstItem: Item, secondItem: Item) =
-            firstItem == secondItem
-    }
 }
