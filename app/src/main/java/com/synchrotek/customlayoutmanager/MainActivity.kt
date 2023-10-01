@@ -2,6 +2,7 @@ package com.synchrotek.customlayoutmanager
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SnapHelper
 import com.synchrotek.customlayoutmanager.adapters.ItemsAdapter
 import com.synchrotek.customlayoutmanager.databinding.ActivityMainBinding
@@ -36,12 +37,15 @@ class MainActivity : AppCompatActivity() {
         recyclerView.layoutManager = layoutManager
         binding.recyclerView.adapter = itemsAdapter
 
+
+
         // Here we should configure desired item where smooth scroller should scroll
         // Page is calculated depending of rows x matrices grid size
         // If item is contained it that page calculation fill align that page
         // On left and right edges
         // For example item 38 should be located in page 3 since there are 10 items per page
-//        binding.recyclerView.smoothScrollToPosition(38)
+        // In thi case position is page number
+        binding.recyclerView.smoothScrollToPosition(8)
 
         // Add simple ItemDecorator to RecyclerView which overrides default insets
         // When calculation of insets item decorator is finished we can add custom Inset Decorator to RV

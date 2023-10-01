@@ -20,6 +20,8 @@ class CustomGridLayoutManager(
 
     companion object {
         const val DEFAULT_COUNT = 1
+        const val viewWidth = 300
+        const val viewHeight = 95
     }
 
     private var horizontalOffSet: Int = 0
@@ -34,11 +36,6 @@ class CustomGridLayoutManager(
     private var mFirstChangedPosition: Int = 0
     private var mChangedPositionCount: Int = 0
     private var mFirstVisiblePosition: Int = 0
-
-    // TODO Change this not to be hardcoded values
-    // TODO For width and height
-    private val viewWidth = 300
-    private val viewHeight = 95
 
 
     override fun generateDefaultLayoutParams(): RecyclerView.LayoutParams =
@@ -145,21 +142,16 @@ class CustomGridLayoutManager(
         position: Int
     ) {
         val itemsPerPage = rows * columns
-        val currentPage = position / itemsPerPage
-        val nextPageStart = currentPage * itemsPerPage
+        val nextPageStart = position * itemsPerPage
 
         val smoothScroller = CustomSmoothScroller(recyclerView.context)
+        smoothScroller.targetPosition = nextPageStart
 
-        if (reverseLayout) {
-            smoothScroller.targetPosition = nextPageStart + (rows * columns) - 1
-        } else {
-            smoothScroller.targetPosition = nextPageStart
-        }
         startSmoothScroll(smoothScroller)
     }
 
-    override fun computeScrollVectorForPosition(targetPosition: Int): PointF {
-        val direction = if (reverseLayout) -1f else 1f
+    override fun computeScrollVectorForPosition(targetPosition: Int): PointF? {
+        val direction = if (reverseLayout) -1f else 10f
         return PointF(direction, 0f)
     }
 
