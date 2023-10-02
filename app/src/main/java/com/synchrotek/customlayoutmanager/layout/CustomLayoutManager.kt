@@ -104,7 +104,6 @@ class CustomGridLayoutManager(
             val row = itemIndexInMatrix / columns
             val col = itemIndexInMatrix % columns
 
-
             var right: Int
             var left: Int
             if (reverseLayout) {
@@ -135,7 +134,7 @@ class CustomGridLayoutManager(
 
     /**
      * This method is intended to be used in coloration with the computescrollVectorFotPosition and
-     * and passing desired page number.
+     * and passing desired page number. It should replace smoothToScrollPosition method call
      */
     fun setPageNumber(pageNumber: Int) {
         computeScrollVectorForPosition(targetPosition = pageNumber)
@@ -155,8 +154,8 @@ class CustomGridLayoutManager(
         startSmoothScroll(smoothScroller)
     }
 
-    override fun computeScrollVectorForPosition(targetPosition: Int): PointF? {
-        val direction = if (reverseLayout) -1f else 10f
+    override fun computeScrollVectorForPosition(targetPosition: Int): PointF {
+        val direction = if (reverseLayout) -1f else 1f
         return PointF(direction, 0f)
     }
 
@@ -175,6 +174,7 @@ class CustomGridLayoutManager(
      * getDecoratedMeasuredHeight. Also using getDecoratedLeft and getDecoratedRight
      * to overcome issues with layout measure in case RTL is enabled and to support
      * item decoration logic. Or when dimensions of matrices are greater then display size
+     * All methods from this point below are related to new fill grid approach
      */
     private fun fillGridNew(recycler: RecyclerView.Recycler, state: RecyclerView.State) {
         if (itemCount == 0) {
@@ -186,8 +186,7 @@ class CustomGridLayoutManager(
             return
         }
 
-        if (childCount == 0) { //First or empty layout
-            //Scrap measure one child
+        if (childCount == 0) {
             val scrap = recycler.getViewForPosition(0)
             addView(scrap)
             measureChildWithMargins(scrap, 0, 0)
@@ -197,8 +196,6 @@ class CustomGridLayoutManager(
             detachAndScrapView(scrap, recycler)
         }
 
-
-        //Always update the visible row/column counts
         updateWindowSizing()
 
         var childLeft: Int
@@ -263,16 +260,10 @@ class CustomGridLayoutManager(
         detachAndScrapAttachedViews(recycler)
 
 
-        //Evaluate any disappearing views that may exist
-        if (!state.isPreLayout && !recycler.scrapList.isEmpty()) {
+        if (!state.isPreLayout && recycler.scrapList.isNotEmpty()) {
             val scrapList = recycler.scrapList
             val disappearingViews = HashSet<View>(scrapList.size)
-            for (holder in scrapList) {
 
-            }
-            for (child in disappearingViews) {
-
-            }
         }
     }
 

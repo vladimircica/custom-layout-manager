@@ -6,10 +6,15 @@ import androidx.recyclerview.widget.RecyclerView
 class CustomSnapHelper(
     private val rows: Int,
     private val columns: Int,
+    private val reverseLayout: Boolean = false,
 ) : LinearSnapHelper() {
 
-    private var mPosition = 10
+    private var mPosition = rows * columns
 
+    /**
+     * Should always scroll whole page. Meaning 10 position gaps which
+     * represents one whole page if matrices is 2 x 5
+     */
     override fun findTargetSnapPosition(
         layoutManager: RecyclerView.LayoutManager?,
         velocityX: Int,
