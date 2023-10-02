@@ -13,7 +13,7 @@ class CustomSnapHelper(
 
     /**
      * Should always scroll whole page. Meaning 10 position gaps which
-     * represents one whole page if matrices is 2 x 5
+     * represents one whole page if matrices are 2 x 5 dimensions
      */
     override fun findTargetSnapPosition(
         layoutManager: RecyclerView.LayoutManager?,
