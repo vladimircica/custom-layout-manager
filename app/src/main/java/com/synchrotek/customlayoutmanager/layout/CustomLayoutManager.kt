@@ -32,9 +32,6 @@ class CustomGridLayoutManager(
 
     private val mTotalColumnCount: Int = DEFAULT_COUNT
     private var mVisibleRowCount: Int = 0
-
-    private var mFirstChangedPosition: Int = 0
-    private var mChangedPositionCount: Int = 0
     private var mFirstVisiblePosition: Int = 0
 
 
@@ -136,6 +133,14 @@ class CustomGridLayoutManager(
         }
     }
 
+    /**
+     * This method is intended to be used in coloration with the computescrollVectorFotPosition and
+     * and passing desired page number.
+     */
+    fun setPageNumber(pageNumber: Int) {
+        computeScrollVectorForPosition(targetPosition = pageNumber)
+    }
+
     @Override
     override fun smoothScrollToPosition(
         recyclerView: RecyclerView, state: RecyclerView.State?,
@@ -165,58 +170,11 @@ class CustomGridLayoutManager(
         }
     }
 
-    private fun updateWindowSizing() {
-        mVisibleColumnCount = getHorizontalSpace() / mDecoratedChildWidth + 1
-
-        if (getHorizontalSpace() % mDecoratedChildWidth > 0) {
-            mVisibleColumnCount++
-        }
-
-
-        if (mVisibleColumnCount > getTotalColumnCount()) {
-            mVisibleColumnCount = getTotalColumnCount()
-        }
-
-        mVisibleRowCount = getVerticalSpace() / mDecoratedChildHeight + 1
-
-        if (getVerticalSpace() % mDecoratedChildHeight > 0) {
-            mVisibleRowCount++
-        }
-
-        if (mVisibleRowCount > getTotalRowCount()) {
-            mVisibleRowCount = getTotalRowCount()
-        }
-    }
-
-    private fun getHorizontalSpace(): Int {
-        return width - paddingRight - paddingLeft
-    }
-
-    private fun getTotalColumnCount(): Int {
-        return if (itemCount < mTotalColumnCount) {
-            itemCount
-        } else mTotalColumnCount
-    }
-
-    private fun getVerticalSpace(): Int {
-        return height - paddingBottom - paddingTop
-    }
-
-    private fun getTotalRowCount(): Int {
-        if (itemCount == 0 || mTotalColumnCount == 0) {
-            return 0
-        }
-        var maxRow = itemCount / mTotalColumnCount
-        if (itemCount % mTotalColumnCount != 0) {
-            maxRow++
-        }
-        return maxRow
-    }
-
     /**
      * Try to implement onLayoutChildren using getDecoratedMeasuredWidth and
      * getDecoratedMeasuredHeight. Also using getDecoratedLeft and getDecoratedRight
-     * to overcome issues with layout measure in case RTL is enabled
+     * to overcome issues with layout measure in case RTL is enabled and to support
+     * item decoration logic. Or when dimensions of matrices are greater then display size
      */
     private fun fillGridNew(recycler: RecyclerView.Recycler, state: RecyclerView.State) {
         if (itemCount == 0) {
@@ -226,11 +184,6 @@ class CustomGridLayoutManager(
 
         if (childCount == 0 && state.isPreLayout) {
             return
-        }
-
-        if (!state.isPreLayout) {
-            mFirstChangedPosition = 0
-            mChangedPositionCount = 0
         }
 
         if (childCount == 0) { //First or empty layout
@@ -318,13 +271,57 @@ class CustomGridLayoutManager(
 
             }
             for (child in disappearingViews) {
-                layoutDisappearingView(child)
+
             }
         }
     }
 
-    private fun layoutDisappearingView(disappearingChild: View) {
+    private fun updateWindowSizing() {
+        mVisibleColumnCount = getHorizontalSpace() / mDecoratedChildWidth + 1
 
+        if (getHorizontalSpace() % mDecoratedChildWidth > 0) {
+            mVisibleColumnCount++
+        }
+
+
+        if (mVisibleColumnCount > getTotalColumnCount()) {
+            mVisibleColumnCount = getTotalColumnCount()
+        }
+
+        mVisibleRowCount = getVerticalSpace() / mDecoratedChildHeight + 1
+
+        if (getVerticalSpace() % mDecoratedChildHeight > 0) {
+            mVisibleRowCount++
+        }
+
+        if (mVisibleRowCount > getTotalRowCount()) {
+            mVisibleRowCount = getTotalRowCount()
+        }
+    }
+
+    private fun getHorizontalSpace(): Int {
+        return width - paddingRight - paddingLeft
+    }
+
+    private fun getTotalColumnCount(): Int {
+        return if (itemCount < mTotalColumnCount) {
+            itemCount
+        } else mTotalColumnCount
+    }
+
+    private fun getVerticalSpace(): Int {
+        return height - paddingBottom - paddingTop
+    }
+
+    private fun getTotalRowCount(): Int {
+        if (itemCount == 0 || mTotalColumnCount == 0) {
+            return 0
+        }
+        var maxRow = itemCount / mTotalColumnCount
+        if (itemCount % mTotalColumnCount != 0) {
+            maxRow++
+        }
+        return maxRow
     }
 
     private fun getGlobalRowOfPosition(position: Int): Int {
